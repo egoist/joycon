@@ -1,0 +1,41 @@
+{
+  "name": "joycon",
+  "version": "0.0.0",
+  "description": "Load config with ease.",
+  "repository": {
+    "url": "egoist/joycon",
+    "type": "git"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "test": "npm run lint && jest",
+    "lint": "xo"
+  },
+  "author": "egoist <0x142857@gmail.com>",
+  "license": "MIT",
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "devDependencies": {
+    "@types/json5": "^0.0.29",
+    "@types/node": "^9.6.5",
+    "eslint-config-rem": "^3.0.0",
+    "jest-cli": "^19.0.0",
+    "xo": "^0.18.0"
+  },
+  "xo": {
+    "extends": "rem",
+    "envs": [
+      "jest"
+    ]
+  },
+  "engines": {
+    "node": ">=7.6.0"
+  },
+  "dependencies": {
+    "json5": "^1.0.1"
+  }
+}

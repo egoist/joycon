@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "esModuleInterop": true,
+    "pretty": true,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
+    "lib": [
+      "es2015"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "stripInternal": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"alwaysStrict": true
+  },
+  "include": [
+    "index.js"
+  ]
+}
