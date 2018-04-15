@@ -33,20 +33,12 @@ const pathExists = fp =>
 
 module.exports = class JoyCon {
   constructor(
-    /** @type {string[]} */
-    files,
-    /** @type {{cwd?: string, stopDir?: string}} */
-    { cwd = process.cwd(), stopDir = path.parse(cwd).root } = {}
+    /** @type {{files?: string[], cwd?: string}} */
+    { files, cwd = process.cwd() } = {}
   ) {
-    if (!files || files.length === 0) {
-      throw new Error('files must be an non-empty array!')
-    }
-
-    this.files = files
-
     this.options = {
-      cwd,
-      stopDir
+      files,
+      cwd
     }
     /** @type {Map<string, boolean>} */
     this.existsCache = new Map()
@@ -68,16 +60,18 @@ module.exports = class JoyCon {
   /**
    * Resolve the files in working directory or parent directory
    * @private
+   * @param {string[]} files Files to search
    * @param {string} cwd Working directory
+   * @param {string} stopDir The directory to stop searching
    * @return {Promise<string|null>}
    */
-  async recusivelyResolve(cwd = this.options.cwd) {
+  async recusivelyResolve(files, cwd, stopDir) {
     // Don't traverse above the module root
-    if (cwd === this.options.stopDir || path.basename(cwd) === 'node_modules') {
+    if (cwd === stopDir || path.basename(cwd) === 'node_modules') {
       return null
     }
 
-    for (const filename of this.files) {
+    for (const filename of files) {
       const file = path.join(cwd, filename)
       const exists = this.existsCache.has(file) ?
         this.existsCache.get(file) :
@@ -89,18 +83,35 @@ module.exports = class JoyCon {
     }
 
     // Continue in the parent directory
-    return this.recusivelyResolve(path.dirname(cwd))
-  }
-
-  resolve() {
-    return this.recusivelyResolve(this.options.cwd)
+    return this.recusivelyResolve(files, path.dirname(cwd), stopDir)
   }
 
   /**
-   * Load the file in working directory
+   * Search files and resolve the path
+   * @param {string[]=} files Files to search
+   * @param {string=} cwd Working directory
+   * @param {string=} stopDir The directory to stop searching
    */
-  async load() {
-    const filepath = await this.resolve()
+  resolve(files, cwd, stopDir) {
+    files = files || this.options.files
+    cwd = cwd || this.options.cwd
+    stopDir = stopDir || path.parse(cwd).root
+
+    if (!files || files.length === 0) {
+      return Promise.reject(new Error('files must be an non-empty array!'))
+    }
+
+    return this.recusivelyResolve(files, cwd, stopDir)
+  }
+
+  /**
+   * Search files and resolve the path and data
+   * @param {string[]=} files Files to search
+   * @param {string=} cwd Working directory
+   * @param {string=} stopDir The directory to stop searching
+   */
+  async load(files, cwd, stopDir) {
+    const filepath = await this.resolve(files, cwd, stopDir)
     if (filepath) {
       try {
         const load = this.findLoader(filepath)
@@ -161,5 +172,12 @@ module.exports = class JoyCon {
     }
 
     return null
+  }
+
+  /** Clear cache used by this instance */
+  clearCache() {
+    this.existsCache.clear()
+
+    return this
   }
 }

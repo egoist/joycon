@@ -14,9 +14,9 @@ yarn add joycon
 ```js
 const JoyCon = require('joycon')
 
-const joycon = new JoyCon(['package-lock.json', 'yarn.lock'])
+const joycon = new JoyCon()
 
-joycon.load()
+joycon.load(['package-lock.json', 'yarn.lock'])
 .then(result => {
   // result is {} when files do not exist
   // otherwise { path, data }
@@ -26,7 +26,7 @@ joycon.load()
 By default only `.js` and `.json` file are parsed, otherwise raw data will be returned, so you can add custom loader to parse them:
 
 ```js
-const joycon = new JoyCon(['cargo.toml'])
+const joycon = new JoyCon()
 
 joycon.addLoader({
   test: /\.toml$/,
@@ -35,34 +35,38 @@ joycon.addLoader({
   }
 })
 
-joycon.load()
+joycon.load(['cargo.toml'])
 ```
 
 ## API
 
-### constructor(files, [options])
+### constructor([options])
 
-#### files
+#### options
+
+##### files
 
 Type: `string[]`
 
 The files to search.
 
-#### options
-
 ##### cwd
 
-Working directory to search files.
+The directory to search files.
 
-##### stopDir
+### resolve([files], [cwd], [stopDir])
 
-Directory where the search will stop. By default it's `path.parse(cwd).root`.
+`files` defaults to `options.files`.
 
-### resolve()
+`cwd` defaults to `options.cwd`.
+
+`stopDir` defaults to `path.parse(cwd).root`.
 
 Search files and resolve the path of the file we found.
 
-### load()
+### load(...args)
+
+The signature is the same as [resolve](#resolvefiles-cwd-stopdir).
 
 Search files and resolve `{ path, data }` of the file we found.
 
@@ -74,6 +78,10 @@ interface Loader {
   load(filepath: string): any
 }
 ```
+
+### clearCache()
+
+Each JoyCon instance uses its own cache.
 
 ## Contributing
 
