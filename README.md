@@ -38,8 +38,6 @@ joycon.addLoader({
 joycon.load()
 ```
 
-## DOC
-
 ## API
 
 ### constructor(files, [options])
