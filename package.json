@@ -7,8 +7,10 @@
     "type": "git"
   },
   "main": "lib/index.js",
+  "types": "types/index.d.ts",
   "files": [
-    "lib"
+    "lib",
+    "types/index.d.ts"
   ],
   "scripts": {
     "test": "npm run lint && jest",
