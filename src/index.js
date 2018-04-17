@@ -1,5 +1,5 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 /**
  * Read and return file data
@@ -14,6 +14,11 @@ const readFile = fp =>
     })
   })
 
+// eslint-disable-next-line no-unused-vars
+const readFileSync = fp => {
+  return fs.readFileSync(fp, 'utf8')
+}
+
 /**
  * Check if a file exists
  * @param {string} fp file path
@@ -26,12 +31,15 @@ const pathExists = fp =>
     })
   })
 
+// eslint-disable-next-line no-unused-vars
+const pathExistsSync = fs.existsSync
+
 /**
  * @typedef {(filepath: string) => any} Load
  * @typedef {{test: RegExp, load: Load}} Loader
  */
 
-module.exports = class JoyCon {
+export default class JoyCon {
   constructor(
     /** @type {{files?: string[], cwd?: string}} */
     { files, cwd = process.cwd() } = {}
@@ -65,6 +73,7 @@ module.exports = class JoyCon {
    * @param {string} stopDir The directory to stop searching
    * @return {Promise<string|null>}
    */
+  // $MakeMeSync
   async recusivelyResolve(files, cwd, stopDir) {
     // Don't traverse above the module root
     if (cwd === stopDir || path.basename(cwd) === 'node_modules') {
@@ -73,9 +82,11 @@ module.exports = class JoyCon {
 
     for (const filename of files) {
       const file = path.join(cwd, filename)
-      const exists = this.existsCache.has(file) ?
-        this.existsCache.get(file) :
-        await pathExists(file) // eslint-disable-line no-await-in-loop
+      const exists =
+        // Disable cache in tests
+        process.env.NODE_ENV !== 'test' && this.existsCache.has(file) ?
+          this.existsCache.get(file) :
+          await pathExists(file) // eslint-disable-line no-await-in-loop
       if (exists) {
         this.existsCache.set(file, true)
         return file
@@ -83,7 +94,7 @@ module.exports = class JoyCon {
     }
 
     // Continue in the parent directory
-    return this.recusivelyResolve(files, path.dirname(cwd), stopDir)
+    return this.recusivelyResolve(files, path.dirname(cwd), stopDir) // $MakeMeSync
   }
 
   /**
@@ -92,16 +103,17 @@ module.exports = class JoyCon {
    * @param {string=} cwd Working directory
    * @param {string=} stopDir The directory to stop searching
    */
-  resolve(files, cwd, stopDir) {
+  // $MakeMeSync
+  async resolve(files, cwd, stopDir) {
     files = files || this.options.files
     cwd = cwd || this.options.cwd
     stopDir = stopDir || path.parse(cwd).root
 
     if (!files || files.length === 0) {
-      return Promise.reject(new Error('files must be an non-empty array!'))
+      throw new Error('files must be an non-empty array!')
     }
 
-    return this.recusivelyResolve(files, cwd, stopDir)
+    return this.recusivelyResolve(files, cwd, stopDir) // $MakeMeSync
   }
 
   /**
@@ -110,15 +122,16 @@ module.exports = class JoyCon {
    * @param {string=} cwd Working directory
    * @param {string=} stopDir The directory to stop searching
    */
+  // $MakeMeSync
   async load(files, cwd, stopDir) {
     const filepath = await this.resolve(files, cwd, stopDir)
     if (filepath) {
       try {
-        const load = this.findLoader(filepath)
-        if (load) {
+        const loader = this.findLoader(filepath)
+        if (loader) {
           return {
             path: filepath,
-            data: await load(filepath)
+            data: await loader.load(filepath)
           }
         }
 
@@ -167,7 +180,7 @@ module.exports = class JoyCon {
   findLoader(filepath) {
     for (const loader of this.loaders) {
       if (loader.test && loader.test.test(filepath)) {
-        return loader.load
+        return loader
       }
     }
 

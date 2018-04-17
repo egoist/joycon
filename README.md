@@ -5,8 +5,7 @@
 
 ## Differences with [cosmiconfig](https://github.com/davidtheclark/cosmiconfig)?
 
-- JoyCon is much more lightweight while being feature-complete.
-- JoyCon does not have a `.sync` method, we could implement this but it unnecessarily makes the codebase more complex.
+JoyCon is much more lightweight while being feature-complete.
 
 ## Install
 
@@ -69,20 +68,27 @@ The directory to search files.
 
 Search files and resolve the path of the file we found.
 
+There's also `.resolveSync` method.
+
 ### load(...args)
 
 The signature is the same as [resolve](#resolvefiles-cwd-stopdir).
 
 Search files and resolve `{ path, data }` of the file we found.
 
+There's also `.loadSync` method.
+
 ### addLoader(Loader)
 
 ```typescript
 interface Loader {
   test: RegExp
-  load(filepath: string): any
+  load(filepath: string)?: Promise<any>
+  loadSync(filepath: string)?: any
 }
 ```
+
+At least one of `load` and `loadSync` is required, depending on where you're calling the synchonous methods or not.
 
 ### clearCache()
 
