@@ -14,6 +14,9 @@ const readFile = fp =>
     })
   })
 
+/**
+ * @param {string} fp file path
+ */
 // eslint-disable-next-line no-unused-vars
 const readFileSync = fp => {
   return fs.readFileSync(fp, 'utf8')
@@ -175,7 +178,7 @@ export default class JoyCon {
   /**
    *  Find a loader for given path
    * @param {string} filepath file path
-   * @return {Load|null}
+   * @return {Loader|null}
    */
   findLoader(filepath) {
     for (const loader of this.loaders) {

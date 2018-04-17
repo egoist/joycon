@@ -13,7 +13,7 @@
   "scripts": {
     "test": "npm run lint && jest",
     "lint": "xo",
-    "build": "babel src -d lib",
+    "build": "babel src -d lib --no-comments",
     "prepublishOnly": "npm run build"
   },
   "author": "egoist <0x142857@gmail.com>",
