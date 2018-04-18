@@ -197,3 +197,7 @@ export default class JoyCon {
     return this
   }
 }
+
+module.exports = JoyCon
+// For TypeScript
+module.exports.default = JoyCon

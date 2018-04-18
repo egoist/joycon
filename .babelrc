@@ -9,5 +9,5 @@
       }
     ]
   ],
-  "plugins": ["sync", "add-module-exports"]
+  "plugins": ["sync"]
 }
