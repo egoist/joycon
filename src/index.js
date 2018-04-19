@@ -84,7 +84,7 @@ export default class JoyCon {
     }
 
     for (const filename of files) {
-      const file = path.join(cwd, filename)
+      const file = path.resolve(cwd, filename)
       const exists =
         // Disable cache in tests
         process.env.NODE_ENV !== 'test' && this.existsCache.has(file) ?
