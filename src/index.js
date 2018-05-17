@@ -44,12 +44,13 @@ const pathExistsSync = fs.existsSync
 
 export default class JoyCon {
   constructor(
-    /** @type {{files?: string[], cwd?: string}} */
-    { files, cwd = process.cwd() } = {}
+    /** @type {{files?: string[], cwd?: string, stopDir?: string}} */
+    { files, cwd = process.cwd(), stopDir } = {}
   ) {
     this.options = {
       files,
-      cwd
+      cwd,
+      stopDir
     }
     /** @type {Map<string, boolean>} */
     this.existsCache = new Map()
@@ -110,7 +111,7 @@ export default class JoyCon {
   async resolve(files, cwd, stopDir) {
     files = files || this.options.files
     cwd = cwd || this.options.cwd
-    stopDir = stopDir || path.parse(cwd).root
+    stopDir = stopDir || this.options.stopDir || path.parse(cwd).root
 
     if (!files || files.length === 0) {
       throw new Error('files must be an non-empty array!')

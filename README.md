@@ -5,7 +5,7 @@
 
 ## Differences with [cosmiconfig](https://github.com/davidtheclark/cosmiconfig)?
 
-JoyCon is much more lightweight while being feature-complete.
+JoyCon is zero-dependency but feature-complete.
 
 ## Install
 
@@ -58,13 +58,17 @@ The files to search.
 
 The directory to search files.
 
+##### stopDir
+
+The directory to stop searching.
+
 ### resolve([files], [cwd], [stopDir])
 
 `files` defaults to `options.files`.
 
 `cwd` defaults to `options.cwd`.
 
-`stopDir` defaults to `path.parse(cwd).root`.
+`stopDir` defaults to `options.stopDir` then `path.parse(cwd).root`.
 
 Search files and resolve the path of the file we found.
 
