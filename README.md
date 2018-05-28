@@ -92,7 +92,7 @@ interface Loader {
 }
 ```
 
-At least one of `load` and `loadSync` is required, depending on where you're calling the synchonous methods or not.
+At least one of `load` and `loadSync` is required, depending on whether you're calling the synchonous methods or not.
 
 ### clearCache()
 
