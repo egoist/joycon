@@ -130,49 +130,41 @@ export default class JoyCon {
   async load(files, cwd, stopDir) {
     const filepath = await this.resolve(files, cwd, stopDir)
     if (filepath) {
-      try {
-        const loader = this.findLoader(filepath)
-        if (loader) {
-          return {
-            path: filepath,
-            data: await loader.load(filepath)
-          }
-        }
-
-        const extname = path.extname(filepath).slice(1)
-        if (extname === 'js') {
-          return {
-            path: filepath,
-            data: require(filepath)
-          }
-        }
-
-        const data = await readFile(filepath)
-
-        if (extname === 'json') {
-          return {
-            path: filepath,
-            data: require('json5').parse(data)
-          }
-        }
-
-        // Don't parse data
-        // If it's neither .js nor .json
-        // Leave this to user-land
+      const loader = this.findLoader(filepath)
+      if (loader) {
         return {
           path: filepath,
-          data
+          data: await loader.load(filepath)
         }
-      } catch (err) {
-        if (err.code === 'MODULE_NOT_FOUND' || err.code === 'ENOENT') {
-          this.existsCache.delete(filepath)
-          return {}
-        }
+      }
 
-        throw err
+      const extname = path.extname(filepath).slice(1)
+      if (extname === 'js') {
+        return {
+          path: filepath,
+          data: require(filepath)
+        }
+      }
+
+      const data = await readFile(filepath)
+
+      if (extname === 'json') {
+        return {
+          path: filepath,
+          data: require('json5').parse(data)
+        }
+      }
+
+      // Don't parse data
+      // If it's neither .js nor .json
+      // Leave this to user-land
+      return {
+        path: filepath,
+        data
       }
     }
 
+    this.existsCache.delete(filepath)
     return {}
   }
 
