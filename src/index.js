@@ -44,18 +44,21 @@ const pathExistsSync = fs.existsSync
 
 export default class JoyCon {
   constructor(
-    /** @type {{files?: string[], cwd?: string, stopDir?: string}} */
-    { files, cwd = process.cwd(), stopDir } = {}
+    /** @type {{files?: string[], cwd?: string, stopDir?: string, packageKey?: string}} */
+    { files, cwd = process.cwd(), stopDir, packageKey } = {}
   ) {
     this.options = {
       files,
       cwd,
-      stopDir
+      stopDir,
+      packageKey
     }
     /** @type {Map<string, boolean>} */
     this.existsCache = new Map()
     /** @type {Set<Loader>} */
     this.loaders = new Set()
+    /** @type {Set<string, any>} */
+    this.packageJsonCache = new Map()
   }
 
   /**
@@ -86,13 +89,27 @@ export default class JoyCon {
 
     for (const filename of files) {
       const file = path.resolve(cwd, filename)
-      const exists =
+      let exists =
         // Disable cache in tests
         process.env.NODE_ENV !== 'test' && this.existsCache.has(file) ?
           this.existsCache.get(file) :
           await pathExists(file) // eslint-disable-line no-await-in-loop
+      // For `package.json`
+      // If you specified the `packageKey` option
+      // It will only be considered existing when the property exists
+      if (exists && this.options.packageKey && path.basename(file) === 'package.json') {
+        const data = require(file)
+        delete require.cache[file]
+        // The cache will be usd in `.load` method
+        // But not in the next `require(filepath)` call
+        this.packageJsonCache.set(file, data)
+        exists = Object.prototype.hasOwnProperty.call(data, this.options.packageKey)
+      } else {
+        this.packageJsonCache.delete(file)
+      }
+
+      this.existsCache.set(file, exists)
       if (exists) {
-        this.existsCache.set(file, true)
         return file
       }
     }
@@ -146,12 +163,18 @@ export default class JoyCon {
         }
       }
 
-      const data = await readFile(filepath)
-
       if (extname === 'json') {
+        if (this.packageJsonCache.has(filepath)) {
+          return {
+            path: filepath,
+            data: this.packageJsonCache.get(filepath)
+          }
+        }
+
+        const data = require('json5').parse(await readFile(filepath))
         return {
           path: filepath,
-          data: require('json5').parse(data)
+          data
         }
       }
 
@@ -160,11 +183,10 @@ export default class JoyCon {
       // Leave this to user-land
       return {
         path: filepath,
-        data
+        data: await readFile(filepath)
       }
     }
 
-    this.existsCache.delete(filepath)
     return {}
   }
 

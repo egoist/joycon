@@ -27,6 +27,22 @@ describe('resolve', () => {
     )
     expect(fp).toBe(null)
   })
+
+  it('package.json but packageKey does not exist', async () => {
+    const fp = await new JoyCon({ packageKey: 'name' }).resolveSync(
+      ['package.json', 'foo.json'],
+      fixture('package-json-no-key')
+    )
+    expect(fp.endsWith('foo.json')).toBe(true)
+  })
+
+  it('package.json', async () => {
+    const fp = await new JoyCon({ packageKey: 'what' }).resolveSync(
+      ['package.json', 'foo.json'],
+      fixture('package-json')
+    )
+    expect(fp.endsWith('package.json')).toBe(true)
+  })
 })
 
 describe('load', () => {
@@ -49,5 +65,21 @@ describe('load', () => {
   it('returns {} when not found', () => {
     const res = new JoyCon().loadSync(['hehe.json'], fixture('has-json-file'))
     expect(res).toEqual({})
+  })
+
+  it('package.json but packageKey does not exist', async () => {
+    const { data } = await new JoyCon({ packageKey: 'name' }).loadSync(
+      ['package.json', 'foo.json'],
+      fixture('package-json-no-key')
+    )
+    expect(data).toEqual({ foo: true })
+  })
+
+  it('package.json', async () => {
+    const { data } = await new JoyCon({ packageKey: 'what' }).loadSync(
+      ['package.json', 'foo.json'],
+      fixture('package-json')
+    )
+    expect(data).toEqual({ what: true })
   })
 })

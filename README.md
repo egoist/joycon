@@ -62,6 +62,10 @@ The directory to search files.
 
 The directory to stop searching.
 
+##### packageKey
+
+You can load config from certain property in a `package.json` file. For example, when you set `packageKey: 'babel'`, it will load the `babel` property in `package.json` instead of the entire data.
+
 ### resolve([files], [cwd], [stopDir])
 
 `files` defaults to `options.files`.
