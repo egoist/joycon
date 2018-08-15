@@ -127,8 +127,8 @@ export default class JoyCon {
   // $MakeMeSync
   async resolve(files, cwd, stopDir) {
     files = files || this.options.files
-    cwd = cwd || this.options.cwd
-    stopDir = stopDir || this.options.stopDir || path.parse(cwd).root
+    cwd = path.resolve(cwd || this.options.cwd)
+    stopDir = path.resolve(stopDir || this.options.stopDir || path.parse(cwd).root)
 
     if (!files || files.length === 0) {
       throw new Error('files must be an non-empty array!')
