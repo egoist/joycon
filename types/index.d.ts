@@ -5,6 +5,10 @@ export interface Options {
   cwd?: string
   /* the directory to stop searching */
   stopDir?: string
+  /* the key in package.json to read data at */
+  packageKey?: string
+  /* the function used to parse json */
+  parseJSON?: (str: string) => any
 }
 
 export interface LoadResult {

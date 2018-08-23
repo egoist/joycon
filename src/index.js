@@ -44,14 +44,15 @@ const pathExistsSync = fs.existsSync
 
 export default class JoyCon {
   constructor(
-    /** @type {{files?: string[], cwd?: string, stopDir?: string, packageKey?: string}} */
-    { files, cwd = process.cwd(), stopDir, packageKey } = {}
+    /** @type {{files?: string[], cwd?: string, stopDir?: string, packageKey?: string, parseJSON?: (str: string) => any}} */
+    { files, cwd = process.cwd(), stopDir, packageKey, parseJSON = JSON.parse } = {}
   ) {
     this.options = {
       files,
       cwd,
       stopDir,
-      packageKey
+      packageKey,
+      parseJSON
     }
     /** @type {Map<string, boolean>} */
     this.existsCache = new Map()
@@ -171,7 +172,7 @@ export default class JoyCon {
           }
         }
 
-        const data = require('json5').parse(await readFile(filepath))
+        const data = this.options.parseJSON(await readFile(filepath))
         return {
           path: filepath,
           data

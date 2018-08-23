@@ -50,7 +50,7 @@ joycon.load(['cargo.toml'])
 
 ##### files
 
-Type: `string[]`
+- Type: `string[]`
 
 The files to search.
 
@@ -65,6 +65,13 @@ The directory to stop searching.
 ##### packageKey
 
 You can load config from certain property in a `package.json` file. For example, when you set `packageKey: 'babel'`, it will load the `babel` property in `package.json` instead of the entire data.
+
+##### parseJSON
+
+- Type: `(str: string) => any`
+- Default: `JSON.parse`
+
+The function used to parse JSON string.
 
 ### resolve([files], [cwd], [stopDir])
 
