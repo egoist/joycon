@@ -47,8 +47,5 @@
   },
   "engines": {
     "node": ">=6"
-  },
-  "dependencies": {
-    "json5": "^1.0.1"
   }
 }
