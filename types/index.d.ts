@@ -37,11 +37,11 @@ export interface MultiLoader {
 declare class JoyCon {
   constructor(options: Options)
 
-  resolve(files?: string[], cwd?: string, stopDir?: string): Promise<string | null>
-  resolveSync(files?: string[], cwd?: string, stopDir?: string): string | null
+  resolve(files?: string[] | Options, cwd?: string, stopDir?: string): Promise<string | null>
+  resolveSync(files?: string[] | Options, cwd?: string, stopDir?: string): string | null
 
-  load(files?: string[], cwd?: string, stopDir?: string): Promise<LoadResult>
-  loadSync(files?: string[], cwd?: string, stopDir?: string): LoadResult
+  load(files?: string[] | Options, cwd?: string, stopDir?: string): Promise<LoadResult>
+  loadSync(files?: string[] | Options, cwd?: string, stopDir?: string): LoadResult
 
   addLoader(loader: AsyncLoader | SyncLoader | MultiLoader): this
 }

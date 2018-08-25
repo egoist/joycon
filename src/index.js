@@ -37,16 +37,14 @@ const pathExists = fp =>
 // eslint-disable-next-line no-unused-vars
 const pathExistsSync = fs.existsSync
 
-/**
- * @typedef {(filepath: string) => any} Load
- * @typedef {{test: RegExp, load: Load}} Loader
- */
-
 export default class JoyCon {
-  constructor(
-    /** @type {{files?: string[], cwd?: string, stopDir?: string, packageKey?: string, parseJSON?: (str: string) => any}} */
-    { files, cwd = process.cwd(), stopDir, packageKey, parseJSON = JSON.parse } = {}
-  ) {
+  constructor({
+    files,
+    cwd = process.cwd(),
+    stopDir,
+    packageKey,
+    parseJSON = JSON.parse
+  } = {}) {
     this.options = {
       files,
       cwd,
@@ -73,23 +71,18 @@ export default class JoyCon {
     return this
   }
 
-  /**
-   * Resolve the files in working directory or parent directory
-   * @private
-   * @param {string[]} files Files to search
-   * @param {string} cwd Working directory
-   * @param {string} stopDir The directory to stop searching
-   * @return {Promise<string|null>}
-   */
   // $MakeMeSync
-  async recusivelyResolve(files, cwd, stopDir) {
+  async recusivelyResolve(options) {
     // Don't traverse above the module root
-    if (cwd === stopDir || path.basename(cwd) === 'node_modules') {
+    if (
+      options.cwd === options.stopDir ||
+      path.basename(options.cwd) === 'node_modules'
+    ) {
       return null
     }
 
-    for (const filename of files) {
-      const file = path.resolve(cwd, filename)
+    for (const filename of options.files) {
+      const file = path.resolve(options.cwd, filename)
       let exists =
         // Disable cache in tests
         process.env.NODE_ENV !== 'test' && this.existsCache.has(file) ?
@@ -98,13 +91,17 @@ export default class JoyCon {
       // For `package.json`
       // If you specified the `packageKey` option
       // It will only be considered existing when the property exists
-      if (exists && this.options.packageKey && path.basename(file) === 'package.json') {
+      if (
+        exists &&
+        options.packageKey &&
+        path.basename(file) === 'package.json'
+      ) {
         const data = require(file)
         delete require.cache[file]
         // The cache will be usd in `.load` method
         // But not in the next `require(filepath)` call
         this.packageJsonCache.set(file, data)
-        exists = Object.prototype.hasOwnProperty.call(data, this.options.packageKey)
+        exists = Object.prototype.hasOwnProperty.call(data, options.packageKey)
       } else {
         this.packageJsonCache.delete(file)
       }
@@ -116,37 +113,42 @@ export default class JoyCon {
     }
 
     // Continue in the parent directory
-    return this.recusivelyResolve(files, path.dirname(cwd), stopDir) // $MakeMeSync
+    return this.recusivelyResolve(
+      Object.assign({}, options, { cwd: path.dirname(options.cwd) })
+    ) // $MakeMeSync
   }
 
-  /**
-   * Search files and resolve the path
-   * @param {string[]=} files Files to search
-   * @param {string=} cwd Working directory
-   * @param {string=} stopDir The directory to stop searching
-   */
   // $MakeMeSync
-  async resolve(files, cwd, stopDir) {
-    files = files || this.options.files
-    cwd = path.resolve(cwd || this.options.cwd)
-    stopDir = path.resolve(stopDir || this.options.stopDir || path.parse(cwd).root)
+  async resolve(...args) {
+    const options = Object.assign({}, this.options)
 
-    if (!files || files.length === 0) {
+    if (Object.prototype.toString.call(args[0]) === '[object Object]') {
+      Object.assign(options, args[0])
+    } else {
+      if (args[0]) {
+        options.files = args[0]
+      }
+      if (args[1]) {
+        options.cwd = args[1]
+      }
+      if (args[2]) {
+        options.stopDir = args[2]
+      }
+    }
+
+    options.cwd = path.resolve(options.cwd)
+    options.stopDir = options.stopDir ? path.resolve(options.stopDir) : path.parse(options.cwd).root
+
+    if (!options.files || options.files.length === 0) {
       throw new Error('files must be an non-empty array!')
     }
 
-    return this.recusivelyResolve(files, cwd, stopDir) // $MakeMeSync
+    return this.recusivelyResolve(options) // $MakeMeSync
   }
 
-  /**
-   * Search files and resolve the path and data
-   * @param {string[]=} files Files to search
-   * @param {string=} cwd Working directory
-   * @param {string=} stopDir The directory to stop searching
-   */
   // $MakeMeSync
-  async load(files, cwd, stopDir) {
-    const filepath = await this.resolve(files, cwd, stopDir)
+  async load(...args) {
+    const filepath = await this.resolve(...args)
     if (filepath) {
       const loader = this.findLoader(filepath)
       if (loader) {

@@ -74,12 +74,15 @@ You can load config from certain property in a `package.json` file. For example,
 The function used to parse JSON string.
 
 ### resolve([files], [cwd], [stopDir])
+### resolve([options])
 
 `files` defaults to `options.files`.
 
 `cwd` defaults to `options.cwd`.
 
 `stopDir` defaults to `options.stopDir` then `path.parse(cwd).root`.
+
+If using a single object `options`, it will be the same as constructor options.
 
 Search files and resolve the path of the file we found.
 
