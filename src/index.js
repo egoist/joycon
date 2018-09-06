@@ -98,10 +98,12 @@ export default class JoyCon {
       ) {
         const data = require(file)
         delete require.cache[file]
+        exists = Object.prototype.hasOwnProperty.call(data, options.packageKey)
         // The cache will be usd in `.load` method
         // But not in the next `require(filepath)` call
-        this.packageJsonCache.set(file, data)
-        exists = Object.prototype.hasOwnProperty.call(data, options.packageKey)
+        if (exists) {
+          this.packageJsonCache.set(file, data[options.packageKey])
+        }
       } else {
         this.packageJsonCache.delete(file)
       }

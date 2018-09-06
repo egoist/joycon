@@ -80,6 +80,6 @@ describe('load', () => {
       ['package.json', 'foo.json'],
       fixture('package-json')
     )
-    expect(data).toEqual({ what: true })
+    expect(data).toEqual('is this')
   })
 })
