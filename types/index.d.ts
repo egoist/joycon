@@ -35,7 +35,7 @@ export interface MultiLoader {
 }
 
 declare class JoyCon {
-  constructor(options: Options)
+  constructor(options?: Options)
 
   resolve(files?: string[] | Options, cwd?: string, stopDir?: string): Promise<string | null>
   resolveSync(files?: string[] | Options, cwd?: string, stopDir?: string): string | null
