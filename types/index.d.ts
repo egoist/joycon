@@ -19,16 +19,22 @@ export interface LoadResult {
 }
 
 export interface AsyncLoader {
+  /** Optional loader name */
+  name?: string
   test: RegExp
   load(filepath: string): Promise<any>
 }
 
 export interface SyncLoader {
+  /** Optional loader name */
+  name?: string
   test: RegExp
   loadSync(filepath: string): any
 }
 
 export interface MultiLoader {
+  /** Optional loader name */
+  name?: string
   test: RegExp
   load(filepath: string): Promise<any>
   loadSync(filepath: string): any
@@ -44,6 +50,7 @@ declare class JoyCon {
   loadSync(files?: string[] | Options, cwd?: string, stopDir?: string): LoadResult
 
   addLoader(loader: AsyncLoader | SyncLoader | MultiLoader): this
+  removeLoader(name: string): this
 }
 
 

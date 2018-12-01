@@ -100,6 +100,7 @@ There's also `.loadSync` method.
 
 ```typescript
 interface Loader {
+  name?: string
   test: RegExp
   load(filepath: string)?: Promise<any>
   loadSync(filepath: string)?: any
@@ -107,6 +108,10 @@ interface Loader {
 ```
 
 At least one of `load` and `loadSync` is required, depending on whether you're calling the synchonous methods or not.
+
+### removeLoader(name)
+
+Remove loaders by loader name.
 
 ### clearCache()
 

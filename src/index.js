@@ -71,6 +71,16 @@ export default class JoyCon {
     return this
   }
 
+  removeLoader(name) {
+    for (const loader of this.loaders) {
+      if (name && loader.name === name) {
+        this.loaders.delete(loader)
+      }
+    }
+
+    return this
+  }
+
   // $MakeMeSync
   async recusivelyResolve(options) {
     // Don't traverse above the module root
