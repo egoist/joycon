@@ -51,6 +51,9 @@ declare class JoyCon {
 
   addLoader(loader: AsyncLoader | SyncLoader | MultiLoader): this
   removeLoader(name: string): this
+
+  /** Clear internal cache */
+  clearCache(): this
 }
 
 

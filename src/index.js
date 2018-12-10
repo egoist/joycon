@@ -56,7 +56,11 @@ export default class JoyCon {
     this.existsCache = new Map()
     /** @type {Set<Loader>} */
     this.loaders = new Set()
-    /** @type {Set<string, any>} */
+    /**
+     * We need to read package json data in `.resolve` method to check if `packageKey` exists in the file
+     * So it makes sense to cache it if the `.resolve` method is called by `.load` method
+     * @type {Set<string, any>}
+     */
     this.packageJsonCache = new Map()
   }
 
@@ -93,35 +97,37 @@ export default class JoyCon {
 
     for (const filename of options.files) {
       const file = path.resolve(options.cwd, filename)
-      let exists =
+      const exists =
         // Disable cache in tests
         process.env.NODE_ENV !== 'test' && this.existsCache.has(file) ?
           this.existsCache.get(file) :
           await pathExists(file) // eslint-disable-line no-await-in-loop
-      // For `package.json`
-      // If you specified the `packageKey` option
-      // It will only be considered existing when the property exists
-      if (
-        exists &&
-        options.packageKey &&
-        path.basename(file) === 'package.json'
-      ) {
-        const data = require(file)
-        delete require.cache[file]
-        exists = Object.prototype.hasOwnProperty.call(data, options.packageKey)
-        // The cache will be usd in `.load` method
-        // But not in the next `require(filepath)` call
-        if (exists) {
-          this.packageJsonCache.set(file, data[options.packageKey])
-        }
-      } else {
-        this.packageJsonCache.delete(file)
-      }
 
       this.existsCache.set(file, exists)
+
       if (exists) {
-        return file
+        // If there's no `packageKey` option or this is not a `package.json` file
+        if (!options.packageKey || path.basename(file) !== 'package.json') {
+          return file
+        }
+
+        // For `package.json` and `packageKey` option
+        // We only consider it to exist when the `packageKey` exists
+        const data = require(file)
+        delete require.cache[file]
+        const hasPackageKey = Object.prototype.hasOwnProperty.call(data, options.packageKey)
+        // The cache will be usd in `.load` method
+        // But not in the next `require(filepath)` call since we deleted it after require
+        // For `package.json`
+        // If you specified the `packageKey` option
+        // It will only be considered existing when the property exists
+        if (hasPackageKey) {
+          this.packageJsonCache.set(file, data)
+          return file
+        }
       }
+
+      continue
     }
 
     // Continue in the parent directory
@@ -132,35 +138,15 @@ export default class JoyCon {
 
   // $MakeMeSync
   async resolve(...args) {
-    const options = Object.assign({}, this.options)
-
-    if (Object.prototype.toString.call(args[0]) === '[object Object]') {
-      Object.assign(options, args[0])
-    } else {
-      if (args[0]) {
-        options.files = args[0]
-      }
-      if (args[1]) {
-        options.cwd = args[1]
-      }
-      if (args[2]) {
-        options.stopDir = args[2]
-      }
-    }
-
-    options.cwd = path.resolve(options.cwd)
-    options.stopDir = options.stopDir ? path.resolve(options.stopDir) : path.parse(options.cwd).root
-
-    if (!options.files || options.files.length === 0) {
-      throw new Error('files must be an non-empty array!')
-    }
-
+    const options = this.normalizeOptions(args)
     return this.recusivelyResolve(options) // $MakeMeSync
   }
 
   // $MakeMeSync
   async load(...args) {
-    const filepath = await this.resolve(...args)
+    const options = this.normalizeOptions(args)
+    const filepath = await this.recusivelyResolve(options)
+
     if (filepath) {
       const loader = this.findLoader(filepath)
       if (loader) {
@@ -182,7 +168,7 @@ export default class JoyCon {
         if (this.packageJsonCache.has(filepath)) {
           return {
             path: filepath,
-            data: this.packageJsonCache.get(filepath)
+            data: this.packageJsonCache.get(filepath)[options.packageKey]
           }
         }
 
@@ -223,8 +209,38 @@ export default class JoyCon {
   /** Clear cache used by this instance */
   clearCache() {
     this.existsCache.clear()
+    this.packageJsonCache.clear()
 
     return this
+  }
+
+  normalizeOptions(args) {
+    const options = Object.assign({}, this.options)
+
+    if (Object.prototype.toString.call(args[0]) === '[object Object]') {
+      Object.assign(options, args[0])
+    } else {
+      if (args[0]) {
+        options.files = args[0]
+      }
+      if (args[1]) {
+        options.cwd = args[1]
+      }
+      if (args[2]) {
+        options.stopDir = args[2]
+      }
+    }
+
+    options.cwd = path.resolve(options.cwd)
+    options.stopDir = options.stopDir ? path.resolve(options.stopDir) : path.parse(options.cwd).root
+
+    if (!options.files || options.files.length === 0) {
+      throw new Error('[joycon] files must be an non-empty array!')
+    }
+
+    options.__normalized__ = true
+
+    return options
   }
 }
 

@@ -23,3 +23,5 @@ joycon.addLoader({
     return 123
   }
 })
+
+joycon.clearCache()
