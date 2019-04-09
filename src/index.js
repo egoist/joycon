@@ -158,6 +158,7 @@ export default class JoyCon {
 
       const extname = path.extname(filepath).slice(1)
       if (extname === 'js') {
+        delete require.cache[filepath]
         return {
           path: filepath,
           data: require(filepath)
