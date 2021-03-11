@@ -2,23 +2,10 @@ import fs from 'fs'
 import path from 'path'
 
 /**
- * Read and return file data
- * @param {string} fp file path
- * @return {Promise<string>} file data
- */
-const readFile = fp =>
-  new Promise((resolve, reject) => {
-    fs.readFile(fp, 'utf8', (err, data) => {
-      if (err) return reject(err)
-      resolve(data)
-    })
-  })
-
-/**
  * @param {string} fp file path
  */
 // eslint-disable-next-line no-unused-vars
-const readFileSync = fp => {
+const readFileSync = (fp) => {
   return fs.readFileSync(fp, 'utf8')
 }
 
@@ -27,9 +14,9 @@ const readFileSync = fp => {
  * @param {string} fp file path
  * @return {Promise<boolean>} whether it exists
  */
-const pathExists = fp =>
-  new Promise(resolve => {
-    fs.access(fp, err => {
+const pathExists = (fp) =>
+  new Promise((resolve) => {
+    fs.access(fp, (err) => {
       resolve(!err)
     })
   })
@@ -43,14 +30,14 @@ export default class JoyCon {
     cwd = process.cwd(),
     stopDir,
     packageKey,
-    parseJSON = JSON.parse
+    parseJSON = JSON.parse,
   } = {}) {
     this.options = {
       files,
       cwd,
       stopDir,
       packageKey,
-      parseJSON
+      parseJSON,
     }
     /** @type {Map<string, boolean>} */
     this.existsCache = new Map()
@@ -62,6 +49,7 @@ export default class JoyCon {
      * @type {Set<string, any>}
      */
     this.packageJsonCache = new Map()
+    this.loadCache = new Map()
   }
 
   /**
@@ -99,9 +87,9 @@ export default class JoyCon {
       const file = path.resolve(options.cwd, filename)
       const exists =
         // Disable cache in tests
-        process.env.NODE_ENV !== 'test' && this.existsCache.has(file) ?
-          this.existsCache.get(file) :
-          await pathExists(file) // eslint-disable-line no-await-in-loop
+        process.env.NODE_ENV !== 'test' && this.existsCache.has(file)
+          ? this.existsCache.get(file)
+          : await pathExists(file) // eslint-disable-line no-await-in-loop
 
       this.existsCache.set(file, exists)
 
@@ -115,7 +103,10 @@ export default class JoyCon {
         // We only consider it to exist when the `packageKey` exists
         const data = require(file)
         delete require.cache[file]
-        const hasPackageKey = Object.prototype.hasOwnProperty.call(data, options.packageKey)
+        const hasPackageKey = Object.prototype.hasOwnProperty.call(
+          data,
+          options.packageKey,
+        )
         // The cache will be usd in `.load` method
         // But not in the next `require(filepath)` call since we deleted it after require
         // For `package.json`
@@ -132,7 +123,7 @@ export default class JoyCon {
 
     // Continue in the parent directory
     return this.recusivelyResolve(
-      Object.assign({}, options, { cwd: path.dirname(options.cwd) })
+      Object.assign({}, options, { cwd: path.dirname(options.cwd) }),
     ) // $MakeMeSync
   }
 
@@ -142,50 +133,58 @@ export default class JoyCon {
     return this.recusivelyResolve(options) // $MakeMeSync
   }
 
+  runLoaderSync(loader, filepath) {
+    return loader.loadSync(filepath)
+  }
+
+  runLoader(loader, filepath) {
+    if (!loader.load) return loader.loadSync(filepath)
+    return loader.load(filepath)
+  }
+
   // $MakeMeSync
   async load(...args) {
     const options = this.normalizeOptions(args)
     const filepath = await this.recusivelyResolve(options)
 
     if (filepath) {
-      const loader = this.findLoader(filepath)
-      if (loader) {
-        return {
-          path: filepath,
-          data: await loader.load(filepath)
-        }
-      }
-
-      const extname = path.extname(filepath).slice(1)
-      if (extname === 'js') {
-        delete require.cache[filepath]
-        return {
-          path: filepath,
-          data: require(filepath)
-        }
-      }
-
-      if (extname === 'json') {
-        if (this.packageJsonCache.has(filepath)) {
-          return {
-            path: filepath,
-            data: this.packageJsonCache.get(filepath)[options.packageKey]
+      const defaultLoader = {
+        test: /\.+/,
+        loadSync: (filepath) => {
+          const extname = path.extname(filepath).slice(1)
+          if (extname === 'js') {
+            delete require.cache[filepath]
+            return require(filepath)
           }
-        }
 
-        const data = this.options.parseJSON(await readFile(filepath))
-        return {
-          path: filepath,
-          data
-        }
+          if (extname === 'json') {
+            if (this.packageJsonCache.has(filepath)) {
+              return this.packageJsonCache.get(filepath)[options.packageKey]
+            }
+
+            const data = this.options.parseJSON(readFileSync(filepath))
+            return data
+          }
+
+          // Don't parse data
+          // If it's neither .js nor .json
+          // Leave this to user-land
+          return readFileSync(filepath)
+        },
+      }
+      const loader = this.findLoader(filepath) || defaultLoader
+
+      let data
+      if (this.loadCache.has(filepath)) {
+        data = this.loadCache.get(filepath)
+      } else {
+        data = await this.runLoader(loader, filepath)
+        this.loadCache.set(filepath, data)
       }
 
-      // Don't parse data
-      // If it's neither .js nor .json
-      // Leave this to user-land
       return {
         path: filepath,
-        data: await readFile(filepath)
+        data,
       }
     }
 
@@ -211,6 +210,7 @@ export default class JoyCon {
   clearCache() {
     this.existsCache.clear()
     this.packageJsonCache.clear()
+    this.loadCache.clear()
 
     return this
   }
@@ -233,7 +233,9 @@ export default class JoyCon {
     }
 
     options.cwd = path.resolve(options.cwd)
-    options.stopDir = options.stopDir ? path.resolve(options.stopDir) : path.parse(options.cwd).root
+    options.stopDir = options.stopDir
+      ? path.resolve(options.stopDir)
+      : path.parse(options.cwd).root
 
     if (!options.files || options.files.length === 0) {
       throw new Error('[joycon] files must be an non-empty array!')

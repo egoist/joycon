@@ -13,8 +13,7 @@
     "types/index.d.ts"
   ],
   "scripts": {
-    "test": "npm run lint && jest",
-    "lint": "xo",
+    "test": "jest --testPathPattern tests",
     "build": "babel src -d lib --no-comments",
     "prepublishOnly": "npm run build"
   },
@@ -24,28 +23,17 @@
     "testEnvironment": "node"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
-    "@types/json5": "^0.0.29",
-    "@types/node": "^9.6.5",
-    "babel-core": "^7.0.0-bridge.0",
-    "babel-jest": "^22.4.3",
+    "@babel/cli": "^7.13.10",
+    "@babel/core": "^7.13.10",
+    "@babel/preset-env": "^7.13.10",
+    "@egoist/prettier-config": "^0.1.0",
+    "@types/node": "^14.14.33",
+    "babel-jest": "^26.6.3",
     "babel-plugin-sync": "^0.1.0",
-    "eslint-config-rem": "^3.0.0",
-    "jest-cli": "^22.4.3",
-    "xo": "^0.18.0"
-  },
-  "xo": {
-    "extends": "rem",
-    "envs": [
-      "jest"
-    ],
-    "ignores": [
-      "lib/**"
-    ]
+    "jest-cli": "^26.6.3",
+    "prettier": "^2.2.1"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=12"
   }
 }
