@@ -27,7 +27,7 @@ joycon.load(['package-lock.json', 'yarn.lock'])
 })
 ```
 
-By default only `.js` and `.json` file are parsed, otherwise raw data will be returned, so you can add custom loader to parse them:
+By default only `.js`, `.cjs`, and `.json` file are parsed, otherwise raw data will be returned, so you can add custom loader to parse them:
 
 ```js
 const joycon = new JoyCon()

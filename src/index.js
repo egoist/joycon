@@ -152,7 +152,7 @@ export default class JoyCon {
         test: /\.+/,
         loadSync: (filepath) => {
           const extname = path.extname(filepath).slice(1)
-          if (extname === 'js') {
+          if (extname === 'js' || extname === 'cjs') {
             delete require.cache[filepath]
             return require(filepath)
           }
