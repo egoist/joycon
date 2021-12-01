@@ -157,19 +157,12 @@ export default class JoyCon {
             return require(filepath)
           }
 
-          if (extname === 'json') {
-            if (this.packageJsonCache.has(filepath)) {
-              return this.packageJsonCache.get(filepath)[options.packageKey]
-            }
-
-            const data = this.options.parseJSON(readFileSync(filepath))
-            return data
+          if (this.packageJsonCache.has(filepath)) {
+            return this.packageJsonCache.get(filepath)[options.packageKey]
           }
 
-          // Don't parse data
-          // If it's neither .js nor .json
-          // Leave this to user-land
-          return readFileSync(filepath)
+          const data = this.options.parseJSON(readFileSync(filepath))
+          return data
         },
       }
       const loader = this.findLoader(filepath) || defaultLoader
